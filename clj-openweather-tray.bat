@@ -1,0 +1,1 @@
+START /MIN javaw -jar clj-openweather-tray-0.0.1-standalone.jar
