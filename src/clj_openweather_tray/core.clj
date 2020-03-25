@@ -2,11 +2,12 @@
   (:gen-class)
   (:import [java.awt SystemTray TrayIcon PopupMenu MenuItem Font Color]
            [java.awt.event ActionListener]
-           (javax.swing SwingUtilities UIManager)
+           (javax.swing UIManager)
            (java.awt.image BufferedImage))
   (:require [clojure.string :as str]
             [clj-http.client :as client]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [clojure.edn :as edn]))
 
 (defn create-tray-icon
   "Creates awt TrayIcon with text instead of icon and Exit MenuItem to close the application."
@@ -87,21 +88,28 @@
 (defn find-closest
   "Finds closest key in a sorted map sm using provided key k."
   [sm k]
-  (if-let [a (key (first (rsubseq sm <= k)))]
-    (if (= a k)
-      a
-      (if-let [b (key (first (subseq sm >= k)))]
-        (if (< (abs (- (Long/valueOf (name k)) (Long/valueOf (name b))))
-               (abs (- (Long/valueOf (name k)) (Long/valueOf (name a)))))
-          b
-          a)))
-    (key (first (subseq sm >= k)))))
+  (let [a (subseq sm <= k)
+        ak (if (empty? a) nil (key (last a)))
+        b (subseq sm >= k)
+        bk (if (empty? b) nil (key (first b)))]
+    (if (= ak k)
+      k
+      (if (= bk k)
+        k
+        (if (and (some? ak) (some? bk))
+          (if (< (abs (- k bk)) (abs (- k ak)))
+            bk
+            ak)
+          (if (some? ak)
+            ak
+            (if (some? bk)
+              bk)))))))
 
 (defn get-color
   "Returns color based on temperature. The higher the temperature, the warmer the color."
   [temp colors]
   (let [sm (into (sorted-map) colors)
-        closest-color-key (find-closest sm (keyword (str (Math/round (.doubleValue temp)))))
+        closest-color-key (find-closest sm (Math/round (.doubleValue temp)))
         closest-color-value (get sm closest-color-key)]
     (Color/decode closest-color-value)))
 
@@ -112,19 +120,19 @@
   (when-not (. SystemTray isSupported)
     (throw (Exception. "SystemTray not supported on this platform.")))
 
-  (SwingUtilities/invokeLater
-    (let [config (json/read-str (slurp "clj-openweather-tray.conf") :key-fn keyword)
+  (while true
+    (let [config (edn/read-string (slurp "clj-openweather-tray-conf.edn"))
           temp (get-temperature (:url config)
                                 (:city-id config)
                                 (:api-key config))
           converted-temp (convert-temperature temp (:scale config))
           color (get-color temp (:colors config))]
-      (UIManager/setLookAndFeel (:look-and-feel config))
-      (while true (do
-                    (update-tray-icon (str (Math/round (.doubleValue converted-temp)))
-                                      color
-                                      (:font config)
-                                      (:font-style config)
-                                      (:font-size config)
-                                      (:icon-size config))
-                    (Thread/sleep (:sleep-interval config)))))))
+      (do
+        (UIManager/setLookAndFeel (:look-and-feel config))
+        (update-tray-icon (str (Math/round (.doubleValue converted-temp)))
+                          color
+                          (:font config)
+                          (:font-style config)
+                          (:font-size config)
+                          (:icon-size config))
+        (Thread/sleep (:sleep-interval config))))))

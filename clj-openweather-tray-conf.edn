@@ -1,0 +1,34 @@
+{
+ :url            "http://api.openweathermap.org/data/2.5/weather?id=%s&appid=%s"
+ :city-id        ""
+ :api-key        ""
+ :sleep-interval 900000
+ :look-and-feel  "com.sun.java.swing.plaf.windows.WindowsLookAndFeel"
+ :font           "Arial"
+ :font-style     0
+ :font-size      11
+ :icon-size      16
+ :scale          "C"
+ :colors         {0   "#9bbcff",
+                  223 "#9bbcff",
+                  228 "#9dbdff",
+                  233 "#9dbeff",
+                  238 "#9fbfff",
+                  243 "#a1c0ff",
+                  248 "#a5c2ff",
+                  253 "#a8c5ff",
+                  258 "#afc9ff",
+                  263 "#b9d0ff",
+                  268 "#cedcff",
+                  273 "#fef9ff",
+                  278 "#fff3ef",
+                  283 "#ffece0",
+                  288 "#ffe3ca",
+                  293 "#ffd9b6",
+                  298 "#ffcc99",
+                  303 "#ffbe7e",
+                  308 "#ffad5e",
+                  313 "#ff932c",
+                  318 "#ff7300",
+                  323 "#ff3300"}
+ }
