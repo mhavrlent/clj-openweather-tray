@@ -8,7 +8,7 @@ Supports both Celsius and Fahrenheit scale.
 Tooltip contains additional weather info (wind speed, direction, sunrise, sunset, etc.)
 
 Screenshot:
-[[https://github.com/mhavrlent/clj-openweather-tray/blob/master/images/screenshot.png|alt=screenshot]]
+<img src="images/screenshot.png">
 
 ## Motivation
 
