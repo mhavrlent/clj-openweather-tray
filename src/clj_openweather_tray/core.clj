@@ -3,7 +3,8 @@
   (:import [java.awt SystemTray TrayIcon PopupMenu MenuItem Font Color]
            [java.awt.event ActionListener]
            (javax.swing UIManager)
-           (java.awt.image BufferedImage))
+           (java.awt.image BufferedImage)
+           (java.time Instant ZonedDateTime ZoneOffset))
   (:require [clojure.string :as str]
             [clj-http.client :as client]
             [clojure.data.json :as json]
@@ -11,7 +12,7 @@
 
 (defn create-tray-icon
   "Creates awt TrayIcon with text instead of icon and Exit MenuItem to close the application."
-  [text color font font-style font-size icon-size]
+  [text color font font-style font-size icon-size tooltip-text]
   (let [popup (PopupMenu.)
         font (Font. font font-style font-size)
         img (BufferedImage. icon-size icon-size BufferedImage/TYPE_INT_ARGB)
@@ -29,7 +30,8 @@
                                             (do (.remove tray tray-icon)
                                                 (System/exit 0)))))
         _ (.add popup exit-item)
-        _ (.setPopupMenu tray-icon popup)]
+        _ (.setPopupMenu tray-icon popup)
+        _ (.setToolTip tray-icon tooltip-text)]
     tray-icon))
 
 (defn remove-all-icons-from-tray
@@ -48,20 +50,18 @@
 
 (defn update-tray-icon
   "Updates tray icon."
-  [text color font font-style font-size icon-size]
+  [text color font font-style font-size icon-size tooltip-text]
   (remove-all-icons-from-tray)
-  (add-icon-to-tray (create-tray-icon text color font font-style font-size icon-size)))
+  (add-icon-to-tray (create-tray-icon text color font font-style font-size icon-size tooltip-text)))
 
-(defn get-temperature
-  "Gets current temperature for given city id using api key from openweathermap.org.
+(defn get-weather-data
+  "Gets current weather data for given city id using api key from openweathermap.org.
   List of city IDs can be downloaded here http://bulk.openweathermap.org/sample/."
   [url city-id api-key]
   (let [url (format url city-id api-key)]
     (-> (client/get url)
         (:body)
-        (json/read-str :key-fn keyword)
-        (:main)
-        (:temp))))
+        (json/read-str :key-fn keyword))))
 
 (defn kelvin-to-celsius
   "Converts Kelvin to Celsius"
@@ -113,6 +113,45 @@
         closest-color-value (get sm closest-color-key)]
     (Color/decode closest-color-value)))
 
+(defn deg-to-cardinal
+  "Converts degrees to cardinal point."
+  [deg]
+  (let [points ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+        points-count (count points)
+        index (Math/round (.doubleValue (/ deg (/ 360 points-count))))]
+    (get points (mod index points-count))))
+
+(defn clouds-percentage-to-text
+  "Converts percentage of clouds to text."
+  [perc]
+  (cond
+    (and (>= perc 0) (<= perc 10)) "Clear sky"
+    (and (>= perc 11) (<= perc 24)) "Few clouds"
+    (and (>= perc 25) (<= perc 50)) "Scattered clouds"
+    (and (>= perc 51) (<= perc 84)) "Broken clouds"
+    (and (>= perc 85) (<= perc 100)) "Overcast clouds"))
+
+(defn extract-hour-and-minute-from-epoch
+  "Converts epoch time to human readable string."
+  [epoch]
+  (let [instant (Instant/ofEpochSecond epoch)
+        zoned-date-time (ZonedDateTime/ofInstant instant (ZoneOffset/UTC))
+        hour (.getHour zoned-date-time)
+        minute (.getMinute zoned-date-time)]
+    (format "%s:%s UTC" hour minute)))
+
+(defn create-tooltip-text
+  "Creates text for the tray tooltip that contains additional weather information."
+  [wind-speed wind-deg humidity clouds sunrise sunset]
+  (format "Wind speed: %s m/s\nWind direction: %s (%s)\nHumidity: %s %%\nSky: %s\nSunrise: %s\nSunset: %s"
+          wind-speed
+          wind-deg
+          (deg-to-cardinal wind-deg)
+          humidity
+          (clouds-percentage-to-text clouds)
+          (extract-hour-and-minute-from-epoch sunrise)
+          (extract-hour-and-minute-from-epoch sunset)))
+
 (defn -main
   "Main method. Updates the tray with temperature from openweathermap.org and then sleeps for x seconds
   (see sleep-interval in config file)."
@@ -122,11 +161,18 @@
 
   (while true
     (let [config (edn/read-string (slurp "clj-openweather-tray-conf.edn"))
-          temp (get-temperature (:url config)
-                                (:city-id config)
-                                (:api-key config))
+          weather-data (get-weather-data (:url config)
+                                         (:city-id config)
+                                         (:api-key config))
+          temp (-> weather-data (:main) (:temp))
           converted-temp (convert-temperature temp (:scale config))
-          color (get-color temp (:colors config))]
+          color (get-color temp (:colors config))
+          wind-speed (-> weather-data (:wind) (:speed))
+          wind-deg (-> weather-data (:wind) (:deg))
+          humidity (-> weather-data (:main) (:humidity))
+          clouds (-> weather-data (:clouds) (:all))
+          sunrise (-> weather-data (:sys) (:sunrise))
+          sunset (-> weather-data (:sys) (:sunset))]
       (do
         (UIManager/setLookAndFeel (:look-and-feel config))
         (update-tray-icon (str (Math/round (.doubleValue converted-temp)))
@@ -134,5 +180,6 @@
                           (:font config)
                           (:font-style config)
                           (:font-size config)
-                          (:icon-size config))
+                          (:icon-size config)
+                          (create-tooltip-text wind-speed wind-deg humidity clouds sunrise sunset))
         (Thread/sleep (:sleep-interval config))))))

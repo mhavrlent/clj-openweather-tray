@@ -5,7 +5,7 @@
 
 (deftest create-tray-icon-test
   (testing "tray icon"
-    (let [tray-icon (create-tray-icon "5" Color/WHITE "Arial" 0 11 16)
+    (let [tray-icon (create-tray-icon "5" Color/WHITE "Arial" 0 11 16 "tooltip text")
           img (.getImage tray-icon)
           img-height (.getHeight img)
           img-width (.getWidth img)
@@ -21,7 +21,7 @@
 
 (deftest add-icon-to-tray-test
   (testing "add icon to tray"
-    (add-icon-to-tray (create-tray-icon "5" Color/WHITE "Arial" 0 11 16))
+    (add-icon-to-tray (create-tray-icon "5" Color/WHITE "Arial" 0 11 16 "tooltip text"))
     (let [tray (SystemTray/getSystemTray)
           tray-icons (.getTrayIcons tray)]
       (testing "number of icons in tray should be one"
@@ -29,7 +29,7 @@
 
 (deftest remove-all-icons-from-tray-test
   (testing "remove all icons from tray"
-    (add-icon-to-tray (create-tray-icon "5" Color/WHITE "Arial" 0 11 16)))
+    (add-icon-to-tray (create-tray-icon "5" Color/WHITE "Arial" 0 11 16 "tooltip text")))
   (remove-all-icons-from-tray)
   (let [tray (SystemTray/getSystemTray)
         tray-icons (.getTrayIcons tray)]
@@ -38,19 +38,21 @@
 
 (deftest update-tray-icon-test
   (testing "update tray icon"
-    (update-tray-icon "5" Color/WHITE "Arial" 0 11 16)
+    (update-tray-icon "5" Color/WHITE "Arial" 0 11 16 "tooltip text")
     (let [tray (SystemTray/getSystemTray)
           tray-icons (.getTrayIcons tray)]
       (testing "number of icons in tray should be one"
         (is (= 1 (count tray-icons)))))))
 
-(deftest get-temperature-test
+(deftest get-weather-data-test
   (testing "get temperature"
     (testing "using sample weather API"
-      (is (= 300.15 (get-temperature
-                      "https://samples.openweathermap.org/data/2.5/weather?id=%s&appid=%s"
-                      "2172797"
-                      "b6907d289e10d714a6e88b30761fae22"))))))
+      (is (= 300.15 (-> (get-weather-data
+                          "https://samples.openweathermap.org/data/2.5/weather?id=%s&appid=%s"
+                          "2172797"
+                          "b6907d289e10d714a6e88b30761fae22")
+                        (:main)
+                        (:temp)))))))
 
 (deftest kelvin-to-celsius-test
   (testing "kelvin to celsius conversion"
@@ -96,6 +98,41 @@
 (deftest get-color-test
   (testing "get white color for 273 K"
     (let [color (get-color 273 {273 "#ffffff"})]
-      (do (is (= 255 (.getRed color)))
-          (is (= 255 (.getGreen color)))
-          (is (= 255 (.getBlue color)))))))
+      (do
+        (is (= 255 (.getRed color)))
+        (is (= 255 (.getGreen color)))
+        (is (= 255 (.getBlue color)))))))
+
+(deftest deg-to-cardinal-test
+  (testing "convert degrees to cardinal point"
+    (do
+      (is (= "N" (deg-to-cardinal 0)))
+      (is (= "NNE" (deg-to-cardinal 25)))
+      (is (= "NE" (deg-to-cardinal 50)))
+      (is (= "ENE" (deg-to-cardinal 75)))
+      (is (= "E" (deg-to-cardinal 100)))
+      (is (= "ESE" (deg-to-cardinal 110)))
+      (is (= "SE" (deg-to-cardinal 125)))
+      (is (= "SSE" (deg-to-cardinal 150)))
+      (is (= "S" (deg-to-cardinal 175)))
+      (is (= "SSW" (deg-to-cardinal 200)))
+      (is (= "SW" (deg-to-cardinal 225)))
+      (is (= "WSW" (deg-to-cardinal 250)))
+      (is (= "W" (deg-to-cardinal 275)))
+      (is (= "WNW" (deg-to-cardinal 300)))
+      (is (= "NW" (deg-to-cardinal 325)))
+      (is (= "NNW" (deg-to-cardinal 335)))
+      (is (= "N" (deg-to-cardinal 350)))
+      (is (= "N" (deg-to-cardinal 360)))
+      (is (= "N" (deg-to-cardinal 365)))
+      (is (= "NNE" (deg-to-cardinal 385))))))
+
+(deftest clouds-percentage-to-text-test
+  (testing "5% should be clear sky"
+    (is (= "Clear sky" (clouds-percentage-to-text 5))))
+  (testing "86% should be overcast clouds"
+    (is (= "Overcast clouds" (clouds-percentage-to-text 86)))))
+
+(deftest extract-hour-and-minute-from-epoch-test
+  (testing "1585283921 should return 4:38 UTC"
+    (is (= "4:38 UTC" (extract-hour-and-minute-from-epoch 1585283921)))))

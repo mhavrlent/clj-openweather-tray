@@ -5,6 +5,11 @@ using data from openweathermap.org.
 Color of text is changing based on the temperature.
 Supports both Celsius and Fahrenheit scale.
 
+Tooltip contains additional weather info (wind speed, direction, sunrise, sunset, etc.)
+
+Screenshot:
+[[https://github.com/mhavrlent/clj-openweather-tray/blob/master/images/screenshot.png|alt=screenshot]]
+
 ## Motivation
 
 I created this application for two reasons:
@@ -21,7 +26,7 @@ https://github.com/FelixdelasPozas/TrayWeather. I recommend it if you need more 
 1. Copy generated standalone jar file somewhere along with the config file and bat file, e.g:
     
         mkdir somedir
-        cp .\target\uberjar\clj-openweather-tray-0.0.2-standalone.jar somedir\
+        cp .\target\uberjar\clj-openweather-tray-0.0.3-standalone.jar somedir\
         cp .\clj-openweather-tray-conf.edn somedir\
         cp .\clj-openweather-tray.bat somedir\
     

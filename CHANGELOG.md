@@ -1,6 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.0.3] - 2020-03-27
+### Added
+- Tooltip with additional weather info.
+
+### Changed
+- Updated README.md and CHANGELOG.md with new tooltip info.
+- Added screenshot of tray.
+
 ## [0.0.2] - 2020-03-25
 ### Added
 - This changelog.

@@ -1,4 +1,4 @@
-(defproject mhavrlent/clj-openweather-tray "0.0.2"
+(defproject mhavrlent/clj-openweather-tray "0.0.3"
   :description "System tray app for Windows OS that shows outside temperature in given city using data from openweathermap.org."
   :url "https://github.com/mhavrlent/clj-openweather-tray"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
