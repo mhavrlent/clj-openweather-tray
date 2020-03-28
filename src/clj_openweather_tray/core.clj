@@ -116,10 +116,12 @@
 (defn deg-to-cardinal
   "Converts degrees to cardinal point."
   [deg]
-  (let [points ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
-        points-count (count points)
-        index (Math/round (.doubleValue (/ deg (/ 360 points-count))))]
-    (get points (mod index points-count))))
+  (if (some? deg)
+    (let [points ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+          points-count (count points)
+          index (Math/round (.doubleValue (/ deg (/ 360 points-count))))]
+      (get points (mod index points-count)))
+    "Data missing"))
 
 (defn clouds-percentage-to-text
   "Converts percentage of clouds to text."

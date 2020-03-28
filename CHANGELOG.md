@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## [0.0.4] - 2020-03-28
+### Fixed
+- Fix NPE in deg_to_cardinal function caused by missing wind degrees property in json.
+
+### Added
+- native-image config for lein native-image plugin.
+
 ## [0.0.3] - 2020-03-27
 ### Added
 - Tooltip with additional weather info.

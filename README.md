@@ -26,7 +26,7 @@ https://github.com/FelixdelasPozas/TrayWeather. I recommend it if you need more 
 1. Copy generated standalone jar file somewhere along with the config file and bat file, e.g:
     
         mkdir somedir
-        cp .\target\uberjar\clj-openweather-tray-0.0.3-standalone.jar somedir\
+        cp .\target\uberjar\clj-openweather-tray-0.0.4-standalone.jar somedir\
         cp .\clj-openweather-tray-conf.edn somedir\
         cp .\clj-openweather-tray.bat somedir\
     
